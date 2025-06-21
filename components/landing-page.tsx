@@ -168,7 +168,7 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4">
+      <section id="features" className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -298,7 +298,7 @@ export function LandingPage() {
                 <div className="w-12 h-12 bg-gradient-to-r from-orange-600 to-red-600 rounded-lg flex items-center justify-center mb-4">
                   <Trophy className="h-6 w-6 text-white" />
                 </div>
-                <CardTitle>Gamification</CardTitle>
+                <CardTitle>Level Up</CardTitle>
                 <CardDescription>
                   Stay motivated with achievements, streaks, and community challenges designed for GLP-1 users.
                 </CardDescription>
@@ -353,7 +353,7 @@ export function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-4 bg-muted/20">
+      <section id="how-it-works" className="py-20 px-4 bg-muted/20">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -401,7 +401,7 @@ export function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 px-4">
+      <section id="testimonials" className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -486,7 +486,7 @@ export function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="py-20 px-4 bg-muted/20">
+      <section id="pricing" className="py-20 px-4 bg-muted/20">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
@@ -707,59 +707,9 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 border-t border-border">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-2 rounded-lg">
-                  <Activity className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                  WeightWise
-                </h3>
-              </div>
-              <p className="text-muted-foreground">Your AI-powered companion for the GLP-1 journey.</p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4 text-foreground">Product</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>Features</li>
-                <li>Pricing</li>
-                <li>How it Works</li>
-                <li>Success Stories</li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4 text-foreground">Support</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>Help Center</li>
-                <li>Contact Us</li>
-                <li>Community</li>
-                <li>Medical Disclaimer</li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4 text-foreground">Company</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>About</li>
-                <li>Privacy Policy</li>
-                <li>Terms of Service</li>
-                <li>Blog</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 WeightWise. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      
     </div>
   )
 }
+
 
