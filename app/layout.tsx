@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { SubscriptionProvider } from "@/lib/subscription-context"
+import { Footer } from "@/components/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,8 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SubscriptionProvider>{children}</SubscriptionProvider>
+        <SubscriptionProvider>
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </SubscriptionProvider>
       </body>
     </html>
   )
 }
+
