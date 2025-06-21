@@ -22,6 +22,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "@/components/ui/use-toast"
+import { formatWeight, getUserWeightPreference } from "@/lib/weight-utils"
 
 interface WeightEntry {
   date: string
@@ -39,6 +40,7 @@ export function EnhancedWeightTracker() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isOpen, setIsOpen] = useState(false)
   const [detailedView, setDetailedView] = useState(false)
+  const [userWeightUnit, setUserWeightUnit] = useState<"lbs" | "stone" | "kg">("lbs")
 
   useEffect(() => {
     const saved = localStorage.getItem("weightoff-weight-data")
@@ -56,6 +58,8 @@ export function EnhancedWeightTracker() {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
+
+    setUserWeightUnit(getUserWeightPreference())
   }, [])
 
   const addWeightEntry = () => {
@@ -135,6 +139,8 @@ export function EnhancedWeightTracker() {
     weight: entry.weight,
     fullDate: entry.date,
   }))
+
+  const totalLost = startWeight - currentWeight
 
   return (
     <Card>
@@ -276,14 +282,14 @@ export function EnhancedWeightTracker() {
         <div className={`grid gap-4 mb-6 ${detailedView ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-400">
-              {currentWeight > 0 ? currentWeight.toFixed(1) : "--"}
+              {currentWeight > 0 ? formatWeight(currentWeight, userWeightUnit) : "--"}
             </div>
             <div className="text-sm text-muted-foreground">Current</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-emerald-400 flex items-center justify-center gap-1">
               <TrendingDown className="h-5 w-5" />
-              {weightLoss > 0 ? weightLoss.toFixed(1) : "0"}
+              {totalLost > 0 ? formatWeight(totalLost, userWeightUnit) : formatWeight(0, userWeightUnit)}
             </div>
             <div className="text-sm text-muted-foreground">Lost (lbs)</div>
           </div>
@@ -333,7 +339,9 @@ export function EnhancedWeightTracker() {
                     >
                       <div>
                         <div className="font-medium text-foreground">{new Date(entry.date).toLocaleDateString()}</div>
-                        <div className="text-sm text-muted-foreground">{entry.weight.toFixed(1)} lbs</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatWeight(entry.weight, userWeightUnit)}
+                        </div>
                         {entry.notes && <div className="text-xs text-muted-foreground">{entry.notes}</div>}
                       </div>
                       <Button

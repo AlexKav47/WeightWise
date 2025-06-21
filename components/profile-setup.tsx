@@ -9,16 +9,28 @@ import { Progress } from "@/components/ui/progress"
 import { User, Target, Pill, Calendar } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
+import { formatWeight } from "@/lib/weight-utils"
 
 interface ProfileData {
   name: string
   email: string
-  startWeight?: number
+  startWeight?: number // This will store weight in lbs for consistency
   currentWeight?: number
   targetWeight?: number
+  weightUnit?: "lbs" | "stone" | "kg" // Track which weight unit system user prefers
+  startWeightStone?: number
+  startWeightLbs?: number
+  startWeightKg?: number
+  targetWeightStone?: number
+  targetWeightLbs?: number
+  targetWeightKg?: number
   medicationDose?: string
   startDate?: string
   height?: number
+  heightUnit?: "imperial" | "metric"
+  heightFeet?: number
+  heightInches?: number
+  heightCm?: number
   age?: number
   gender?: string
 }
@@ -37,9 +49,20 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
     startWeight: initialData.startWeight,
     currentWeight: initialData.currentWeight,
     targetWeight: initialData.targetWeight,
+    weightUnit: initialData.weightUnit || "lbs",
+    startWeightStone: initialData.startWeightStone,
+    startWeightLbs: initialData.startWeightLbs,
+    startWeightKg: initialData.startWeightKg,
+    targetWeightStone: initialData.targetWeightStone,
+    targetWeightLbs: initialData.targetWeightLbs,
+    targetWeightKg: initialData.targetWeightKg,
     medicationDose: initialData.medicationDose,
     startDate: initialData.startDate,
     height: initialData.height,
+    heightUnit: initialData.heightUnit || "imperial",
+    heightFeet: initialData.heightFeet,
+    heightInches: initialData.heightInches,
+    heightCm: initialData.heightCm,
     age: initialData.age,
     gender: initialData.gender,
   })
@@ -107,7 +130,7 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
       <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Complete Your Profile</DialogTitle>
-          <DialogDescription>Let's set up your profile to personalize your WeightOff experience</DialogDescription>
+          <DialogDescription>Let's set up your profile to personalize your WeightWise experience</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -159,14 +182,87 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="height">Height (inches)</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    placeholder="Height in inches"
-                    value={profileData.height || ""}
-                    onChange={(e) => updateData({ height: Number.parseInt(e.target.value) })}
-                  />
+                  <Label>Height</Label>
+                  <div className="space-y-3">
+                    <Select
+                      value={profileData.heightUnit || "imperial"}
+                      onValueChange={(value: "imperial" | "metric") => {
+                        updateData({ heightUnit: value })
+                        // Clear height values when switching units
+                        if (value === "imperial") {
+                          updateData({ heightCm: undefined })
+                        } else {
+                          updateData({ heightFeet: undefined, heightInches: undefined })
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select height unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="imperial">Feet & Inches</SelectItem>
+                        <SelectItem value="metric">Centimeters</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {profileData.heightUnit === "imperial" ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Input
+                            type="number"
+                            placeholder="Feet"
+                            value={profileData.heightFeet || ""}
+                            onChange={(e) => {
+                              const feet = Number.parseInt(e.target.value) || 0
+                              const inches = profileData.heightInches || 0
+                              const totalInches = feet * 12 + inches
+                              updateData({
+                                heightFeet: feet,
+                                height: totalInches,
+                              })
+                            }}
+                          />
+                          <Label className="text-xs text-muted-foreground">Feet</Label>
+                        </div>
+                        <div>
+                          <Input
+                            type="number"
+                            placeholder="Inches"
+                            min="0"
+                            max="11"
+                            value={profileData.heightInches || ""}
+                            onChange={(e) => {
+                              const inches = Number.parseInt(e.target.value) || 0
+                              const feet = profileData.heightFeet || 0
+                              const totalInches = feet * 12 + inches
+                              updateData({
+                                heightInches: inches,
+                                height: totalInches,
+                              })
+                            }}
+                          />
+                          <Label className="text-xs text-muted-foreground">Inches</Label>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Height in centimeters"
+                          value={profileData.heightCm || ""}
+                          onChange={(e) => {
+                            const cm = Number.parseInt(e.target.value) || 0
+                            const inches = Math.round(cm / 2.54) // Convert cm to inches for storage
+                            updateData({
+                              heightCm: cm,
+                              height: inches,
+                            })
+                          }}
+                        />
+                        <Label className="text-xs text-muted-foreground">Centimeters</Label>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Gender</Label>
@@ -193,33 +289,198 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
                 <h3 className="text-lg font-semibold">Weight Goals</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="startWeight">Starting Weight (lbs) *</Label>
-                  <Input
-                    id="startWeight"
-                    type="number"
-                    step="0.1"
-                    placeholder="Current weight"
-                    value={profileData.startWeight || ""}
-                    onChange={(e) =>
+              <div className="space-y-2 mb-4">
+                <Label>Weight Unit</Label>
+                <Select
+                  value={profileData.weightUnit || "lbs"}
+                  onValueChange={(value: "lbs" | "stone" | "kg") => {
+                    updateData({ weightUnit: value })
+                    // Clear weight values when switching units
+                    if (value === "lbs") {
                       updateData({
-                        startWeight: Number.parseFloat(e.target.value),
-                        currentWeight: Number.parseFloat(e.target.value), // Set current weight same as start initially
+                        startWeightStone: undefined,
+                        startWeightLbs: undefined,
+                        startWeightKg: undefined,
+                        targetWeightStone: undefined,
+                        targetWeightLbs: undefined,
+                        targetWeightKg: undefined,
+                      })
+                    } else if (value === "stone") {
+                      updateData({
+                        startWeightKg: undefined,
+                        targetWeightKg: undefined,
+                      })
+                    } else {
+                      updateData({
+                        startWeightStone: undefined,
+                        startWeightLbs: undefined,
+                        targetWeightStone: undefined,
+                        targetWeightLbs: undefined,
                       })
                     }
-                  />
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select weight unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                    <SelectItem value="stone">Stone & Pounds</SelectItem>
+                    <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label>Starting Weight *</Label>
+                  {profileData.weightUnit === "lbs" && (
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Current weight in lbs"
+                      value={profileData.startWeight || ""}
+                      onChange={(e) => {
+                        const weight = Number.parseFloat(e.target.value)
+                        updateData({
+                          startWeight: weight,
+                          currentWeight: weight,
+                        })
+                      }}
+                    />
+                  )}
+
+                  {profileData.weightUnit === "stone" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Stone"
+                          value={profileData.startWeightStone || ""}
+                          onChange={(e) => {
+                            const stone = Number.parseInt(e.target.value) || 0
+                            const lbs = profileData.startWeightLbs || 0
+                            const totalLbs = stone * 14 + lbs
+                            updateData({
+                              startWeightStone: stone,
+                              startWeight: totalLbs,
+                              currentWeight: totalLbs,
+                            })
+                          }}
+                        />
+                        <Label className="text-xs text-muted-foreground">Stone</Label>
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Pounds"
+                          min="0"
+                          max="13"
+                          value={profileData.startWeightLbs || ""}
+                          onChange={(e) => {
+                            const lbs = Number.parseInt(e.target.value) || 0
+                            const stone = profileData.startWeightStone || 0
+                            const totalLbs = stone * 14 + lbs
+                            updateData({
+                              startWeightLbs: lbs,
+                              startWeight: totalLbs,
+                              currentWeight: totalLbs,
+                            })
+                          }}
+                        />
+                        <Label className="text-xs text-muted-foreground">Pounds</Label>
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.weightUnit === "kg" && (
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Current weight in kg"
+                      value={profileData.startWeightKg || ""}
+                      onChange={(e) => {
+                        const kg = Number.parseFloat(e.target.value)
+                        const lbs = Math.round(kg * 2.20462 * 10) / 10 // Convert kg to lbs for storage
+                        updateData({
+                          startWeightKg: kg,
+                          startWeight: lbs,
+                          currentWeight: lbs,
+                        })
+                      }}
+                    />
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="targetWeight">Target Weight (lbs) *</Label>
-                  <Input
-                    id="targetWeight"
-                    type="number"
-                    step="0.1"
-                    placeholder="Goal weight"
-                    value={profileData.targetWeight || ""}
-                    onChange={(e) => updateData({ targetWeight: Number.parseFloat(e.target.value) })}
-                  />
+
+                <div className="space-y-3">
+                  <Label>Target Weight *</Label>
+                  {profileData.weightUnit === "lbs" && (
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Goal weight in lbs"
+                      value={profileData.targetWeight || ""}
+                      onChange={(e) => updateData({ targetWeight: Number.parseFloat(e.target.value) })}
+                    />
+                  )}
+
+                  {profileData.weightUnit === "stone" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Stone"
+                          value={profileData.targetWeightStone || ""}
+                          onChange={(e) => {
+                            const stone = Number.parseInt(e.target.value) || 0
+                            const lbs = profileData.targetWeightLbs || 0
+                            const totalLbs = stone * 14 + lbs
+                            updateData({
+                              targetWeightStone: stone,
+                              targetWeight: totalLbs,
+                            })
+                          }}
+                        />
+                        <Label className="text-xs text-muted-foreground">Stone</Label>
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Pounds"
+                          min="0"
+                          max="13"
+                          value={profileData.targetWeightLbs || ""}
+                          onChange={(e) => {
+                            const lbs = Number.parseInt(e.target.value) || 0
+                            const stone = profileData.targetWeightStone || 0
+                            const totalLbs = stone * 14 + lbs
+                            updateData({
+                              targetWeightLbs: lbs,
+                              targetWeight: totalLbs,
+                            })
+                          }}
+                        />
+                        <Label className="text-xs text-muted-foreground">Pounds</Label>
+                      </div>
+                    </div>
+                  )}
+
+                  {profileData.weightUnit === "kg" && (
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Goal weight in kg"
+                      value={profileData.targetWeightKg || ""}
+                      onChange={(e) => {
+                        const kg = Number.parseFloat(e.target.value)
+                        const lbs = Math.round(kg * 2.20462 * 10) / 10 // Convert kg to lbs for storage
+                        updateData({
+                          targetWeightKg: kg,
+                          targetWeight: lbs,
+                        })
+                      }}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -227,7 +488,7 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
                 <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                   <div className="text-sm font-medium text-purple-300 mb-1">Weight Loss Goal</div>
                   <div className="text-2xl font-bold text-purple-400">
-                    {(profileData.startWeight - profileData.targetWeight).toFixed(1)} lbs
+                    {formatWeight(profileData.startWeight - profileData.targetWeight, profileData.weightUnit || "lbs")}
                   </div>
                   <div className="text-xs text-purple-400/80">
                     {(((profileData.startWeight - profileData.targetWeight) / profileData.startWeight) * 100).toFixed(
@@ -313,7 +574,7 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
               </div>
 
               <p className="text-muted-foreground">
-                Your profile is complete! We'll use this information to personalize your WeightOff experience and help
+                Your profile is complete! We'll use this information to personalize your WeightWise experience and help
                 you achieve your goals.
               </p>
 
@@ -333,19 +594,29 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Starting Weight:</span>
-                    <div className="font-medium">{profileData.startWeight} lbs</div>
+                    <div className="font-medium">
+                      {profileData.startWeight
+                        ? formatWeight(profileData.startWeight, profileData.weightUnit || "lbs")
+                        : "--"}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Target Weight:</span>
-                    <div className="font-medium">{profileData.targetWeight} lbs</div>
+                    <div className="font-medium">
+                      {profileData.targetWeight
+                        ? formatWeight(profileData.targetWeight, profileData.weightUnit || "lbs")
+                        : "--"}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Goal:</span>
                     <div className="font-medium">
                       {profileData.startWeight && profileData.targetWeight
-                        ? (profileData.startWeight - profileData.targetWeight).toFixed(1)
-                        : 0}{" "}
-                      lbs
+                        ? formatWeight(
+                            profileData.startWeight - profileData.targetWeight,
+                            profileData.weightUnit || "lbs",
+                          )
+                        : "--"}
                     </div>
                   </div>
                   <div>
@@ -376,3 +647,5 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
     </Dialog>
   )
 }
+
+

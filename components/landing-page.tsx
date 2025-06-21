@@ -175,7 +175,7 @@ export function LandingPage() {
               Everything You Need for GLP-1 Success
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Unlike generic weight loss apps, WeightOff understands your unique GLP-1 journey with AI that adapts to
+              Unlike generic weight loss apps, WeightWise understands your unique GLP-1 journey with AI that adapts to
               your side effects, energy levels, and progress.
             </p>
           </div>
@@ -408,7 +408,7 @@ export function LandingPage() {
               Loved by GLP-1 Users
             </h2>
             <p className="text-xl text-muted-foreground">
-              See how WeightOff is helping people succeed on their GLP-1 journey
+              See how WeightWise is helping people succeed on their GLP-1 journey
             </p>
           </div>
 
@@ -416,7 +416,7 @@ export function LandingPage() {
             <Card className="gradient-card">
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
-                  {[...Array(4)].map((_, i) => (
+                  {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
@@ -439,7 +439,7 @@ export function LandingPage() {
             <Card className="gradient-card">
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
-                  {[...Array(4)].map((_, i) => (
+                  {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
@@ -501,7 +501,7 @@ export function LandingPage() {
                 <CardTitle className="text-2xl">Free</CardTitle>
                 <CardDescription>Perfect for getting started</CardDescription>
                 <div className="text-4xl font-bold text-foreground mt-4">
-                  €0<span className="text-lg text-muted-foreground">/month</span>
+                  $0<span className="text-lg text-muted-foreground">/month</span>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -539,7 +539,7 @@ export function LandingPage() {
                 <CardTitle className="text-2xl">Plus</CardTitle>
                 <CardDescription>Enhanced AI features</CardDescription>
                 <div className="text-4xl font-bold text-foreground mt-4">
-                  €4.99<span className="text-lg text-muted-foreground">/month</span>
+                  $4.99<span className="text-lg text-muted-foreground">/month</span>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -582,7 +582,7 @@ export function LandingPage() {
                 <CardTitle className="text-2xl">Premium</CardTitle>
                 <CardDescription>Complete AI-powered experience</CardDescription>
                 <div className="text-4xl font-bold text-foreground mt-4">
-                  €9.99<span className="text-lg text-muted-foreground">/month</span>
+                  $9.99<span className="text-lg text-muted-foreground">/month</span>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -762,3 +762,4 @@ export function LandingPage() {
     </div>
   )
 }
+

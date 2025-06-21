@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,7 +40,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       setShowProfileSetup(true)
     } else {
       // For existing users, check if profile exists
-      const existingProfile = localStorage.getItem("weightoff-user")
+      const existingProfile = localStorage.getItem("weightwise-user")
       if (existingProfile) {
         const profileData = JSON.parse(existingProfile)
         const user: User = {
@@ -82,7 +81,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               </div>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              WeightOff
+              WeightWise
             </h1>
             <p className="text-gray-300 mt-2">Your AI-powered wellness companion</p>
           </div>
@@ -148,3 +147,5 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     </>
   )
 }
+
+export default LoginForm

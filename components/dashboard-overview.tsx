@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatWeight, getUserWeightPreference } from "@/lib/weight-utils"
 
 interface QuickStat {
   label: string
@@ -75,17 +76,19 @@ export function DashboardOverview() {
     const weeklyTotal = weeklyWeights + weeklyInjections
     const weeklyPercentage = (weeklyTotal / 7) * 100
 
+    const userWeightUnit = getUserWeightPreference()
+
     const stats: QuickStat[] = [
       {
         label: "Current Weight",
-        value: currentWeight > 0 ? `${currentWeight} lbs` : "-- lbs",
+        value: currentWeight > 0 ? formatWeight(currentWeight, userWeightUnit) : "--",
         change: currentWeight > 0 ? "Weight logged" : "Log your first weight",
         trend: "neutral",
         icon: <TrendingDown className="h-4 w-4" />,
       },
       {
         label: "Total Lost",
-        value: totalLost > 0 ? `${totalLost.toFixed(1)} lbs` : "0 lbs",
+        value: totalLost > 0 ? formatWeight(totalLost, userWeightUnit) : formatWeight(0, userWeightUnit),
         change: totalLost > 0 ? `${weightLossPercent.toFixed(1)}% progress` : "Start your journey",
         trend: totalLost > 0 ? "down" : "neutral",
         icon: <Target className="h-4 w-4" />,

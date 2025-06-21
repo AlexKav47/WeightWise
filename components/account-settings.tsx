@@ -32,7 +32,7 @@ export function AccountSettings() {
 
   useEffect(() => {
     // Load user profile from localStorage
-    const savedUser = localStorage.getItem("weightoff-user")
+    const savedUser = localStorage.getItem("weightwise-user")
     if (savedUser) {
       setProfile(JSON.parse(savedUser))
     }
@@ -42,7 +42,7 @@ export function AccountSettings() {
     setIsLoading(true)
     try {
       // Save to localStorage (in production, this would be an API call)
-      localStorage.setItem("weightoff-user", JSON.stringify(profile))
+      localStorage.setItem("weightwise-user", JSON.stringify(profile))
 
       toast({
         title: "Profile Updated",
@@ -63,10 +63,10 @@ export function AccountSettings() {
     if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
       try {
         // Clear all data
-        localStorage.removeItem("weightoff-user")
-        localStorage.removeItem("weightoff-weight-data")
-        localStorage.removeItem("weightoff-injection-data")
-        localStorage.removeItem("weightoff-side-effects")
+        localStorage.removeItem("weightwise-user")
+        localStorage.removeItem("weightwise-weight-data")
+        localStorage.removeItem("weightwise-injection-data")
+        localStorage.removeItem("weightwise-side-effects")
         localStorage.removeItem("subscription-tier")
 
         toast({
