@@ -147,7 +147,7 @@ Keep responses conversational, helpful, and under 200 words unless more detail i
           <CardTitle className="text-lg">Chat</CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+          <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-[400px] min-h-[200px] pr-2">
             {messages.map((message) => (
               <div
                 key={message.id}

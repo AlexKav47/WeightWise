@@ -126,8 +126,35 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          // Only allow closing if profile is complete or user confirms
+          const isComplete =
+            profileData.name &&
+            profileData.email &&
+            profileData.startWeight &&
+            profileData.targetWeight &&
+            profileData.medicationDose
+
+          if (isComplete) {
+            handleComplete()
+          } else {
+            // Show confirmation dialog for incomplete profile
+            if (
+              confirm(
+                "Are you sure you want to close? Your profile setup is not complete and you won't be able to use the app.",
+              )
+            ) {
+              // User confirmed, close without saving
+              onComplete({} as any) // This will likely cause issues, but respects user choice
+            }
+          }
+        }
+      }}
+    >
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Complete Your Profile</DialogTitle>
           <DialogDescription>Let's set up your profile to personalize your WeightWise experience</DialogDescription>

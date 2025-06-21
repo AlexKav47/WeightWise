@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { DialogTrigger } from "@/components/ui/dialog"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,15 +24,9 @@ import {
   MoreHorizontal,
   Flag,
   ExternalLink,
+  Trash2,
 } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useSubscription } from "@/lib/subscription-context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from "@/components/ui/use-toast"
@@ -95,21 +91,13 @@ export function CommunityDiscussions() {
     category: "General Discussion",
     tags: "",
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const POSTS_PER_PAGE = 10
 
-  if (!features.hasCommunityAccess) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-xl font-semibold mb-2">Community Access Required</h3>
-          <p className="text-muted-foreground mb-4">
-            Upgrade to Plus or Premium to join our supportive community of GLP-1 users.
-          </p>
-          <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">Upgrade Now</Button>
-        </CardContent>
-      </Card>
-    )
-  }
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCategory, searchQuery, sortBy])
 
   const filteredPosts = posts.filter((post) => {
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
@@ -132,6 +120,12 @@ export function CommunityDiscussions() {
         return 0
     }
   })
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedPosts.length / POSTS_PER_PAGE)
+  const startIndex = (currentPage - 1) * POSTS_PER_PAGE
+  const endIndex = startIndex + POSTS_PER_PAGE
+  const currentPosts = sortedPosts.slice(startIndex, endIndex)
 
   const handleLikePost = (postId: string) => {
     setPosts((prev) =>
@@ -186,6 +180,16 @@ export function CommunityDiscussions() {
     setPosts((prev) => prev.map((p) => (p.id === post.id ? { ...p, shares: p.shares + 1 } : p)))
   }
 
+  const handleDeletePost = (postId: string) => {
+    if (window.confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+      setPosts((prev) => prev.filter((post) => post.id !== postId))
+      toast({
+        title: "Post Deleted",
+        description: "Your post has been successfully deleted.",
+      })
+    }
+  }
+
   const handleCreatePost = () => {
     const post: Post = {
       id: Date.now().toString(),
@@ -226,6 +230,21 @@ export function CommunityDiscussions() {
     if (diffInHours < 1) return "Just now"
     if (diffInHours < 24) return `${diffInHours}h ago`
     return `${Math.floor(diffInHours / 24)}d ago`
+  }
+
+  if (!features.hasCommunityAccess) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-xl font-semibold mb-2">Community Access Required</h3>
+          <p className="text-muted-foreground mb-4">
+            Upgrade to Plus or Premium to join our supportive community of GLP-1 users.
+          </p>
+          <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">Upgrade Now</Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -373,7 +392,7 @@ export function CommunityDiscussions() {
             </CardContent>
           </Card>
         ) : (
-          sortedPosts.map((post) => (
+          currentPosts.map((post) => (
             <Card key={post.id} className={post.isPinned ? "border-yellow-500/30 bg-yellow-500/5" : ""}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
@@ -383,7 +402,7 @@ export function CommunityDiscussions() {
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       {post.isPinned && <Pin className="h-4 w-4 text-yellow-500" />}
                       <span className="font-semibold text-foreground">{post.author.name}</span>
@@ -391,14 +410,6 @@ export function CommunityDiscussions() {
                         <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-300">
                           <Award className="h-3 w-3 mr-1" />
                           {post.author.badge}
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {post.author.medication}
-                      </Badge>
-                      {post.author.weightLoss > 0 && (
-                        <Badge className="bg-emerald-500/20 text-emerald-300 text-xs">
-                          -{post.author.weightLoss}lbs
                         </Badge>
                       )}
                       <span className="text-sm text-muted-foreground">•</span>
@@ -411,6 +422,15 @@ export function CommunityDiscussions() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
+                          {post.author.name === "You" && (
+                            <DropdownMenuItem
+                              onClick={() => handleDeletePost(post.id)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Post
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => handleReportPost(post.id)}>
                             <Flag className="h-4 w-4 mr-2" />
                             Report Post
@@ -423,7 +443,9 @@ export function CommunityDiscussions() {
                       </DropdownMenu>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{post.title}</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2 break-all overflow-wrap-anywhere max-w-full">
+                      {post.title}
+                    </h3>
 
                     <div className="flex items-center gap-2 mb-3">
                       <Badge variant="outline" className="text-xs">
@@ -436,7 +458,9 @@ export function CommunityDiscussions() {
                       ))}
                     </div>
 
-                    <p className="text-muted-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
+                    <p className="text-muted-foreground mb-4 whitespace-pre-wrap break-all overflow-wrap-anywhere max-w-full">
+                      {post.content}
+                    </p>
 
                     <div className="flex items-center gap-6">
                       <Button
@@ -481,9 +505,6 @@ export function CommunityDiscussions() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-medium text-sm">{reply.author.name}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {reply.author.medication}
-                                </Badge>
                                 <span className="text-xs text-muted-foreground">{getTimeAgo(reply.timestamp)}</span>
                               </div>
                               <p className="text-sm text-muted-foreground mb-2">{reply.content}</p>
@@ -519,6 +540,50 @@ export function CommunityDiscussions() {
         )}
       </div>
 
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, sortedPosts.length)} of {sortedPosts.length} posts
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className={currentPage === page ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white" : ""}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Post Detail Dialog */}
       <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -542,9 +607,6 @@ export function CommunityDiscussions() {
                         {selectedPost.author.badge}
                       </Badge>
                     )}
-                    <Badge variant="outline" className="text-xs">
-                      {selectedPost.author.medication}
-                    </Badge>
                     <span className="text-sm text-muted-foreground">{getTimeAgo(selectedPost.timestamp)}</span>
                   </div>
                   <p className="text-muted-foreground whitespace-pre-wrap">{selectedPost.content}</p>
@@ -561,9 +623,6 @@ export function CommunityDiscussions() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm">{reply.author.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {reply.author.medication}
-                        </Badge>
                         <span className="text-xs text-muted-foreground">{getTimeAgo(reply.timestamp)}</span>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{reply.content}</p>
