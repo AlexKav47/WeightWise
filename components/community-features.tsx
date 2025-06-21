@@ -5,58 +5,86 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Users, MessageSquare, Trophy, Heart, TrendingUp, Star, Crown } from "lucide-react"
+import { useState, useEffect } from "react"
+
+interface CommunityStats {
+  activeMembers: number
+  successStories: number
+  supportMessages: number
+  averageWeightLoss: string
+}
+
+interface LeaderboardMember {
+  id: string
+  name: string
+  weightLoss: number
+  medication: string
+  streak: number
+}
+
+interface CommunityPost {
+  id: string
+  author: string
+  medication: string
+  content: string
+  likes: number
+  replies: number
+  timeAgo: string
+}
 
 export function CommunityFeatures() {
-  const communityStats = [
-    { label: "Active Members", value: "10,247", icon: <Users className="h-4 w-4" /> },
-    { label: "Success Stories", value: "1,832", icon: <Trophy className="h-4 w-4" /> },
-    { label: "Support Messages", value: "45,291", icon: <Heart className="h-4 w-4" /> },
-    { label: "Average Weight Loss", value: "23.4 lbs", icon: <TrendingUp className="h-4 w-4" /> },
-  ]
+  const [communityStats, setCommunityStats] = useState<CommunityStats>({
+    activeMembers: 0,
+    successStories: 0,
+    supportMessages: 0,
+    averageWeightLoss: "0 lbs",
+  })
 
-  const leaderboard = [
-    { name: "Sarah M.", weightLoss: 45, medication: "Mounjaro", streak: 89 },
-    { name: "Mike R.", weightLoss: 38, medication: "Ozempic", streak: 76 },
-    { name: "Jessica L.", weightLoss: 32, medication: "Wegovy", streak: 65 },
-    { name: "David K.", weightLoss: 28, medication: "Mounjaro", streak: 54 },
-    { name: "Lisa P.", weightLoss: 25, medication: "Ozempic", streak: 43 },
-  ]
+  const [leaderboard, setLeaderboard] = useState<LeaderboardMember[]>([])
+  const [recentPosts, setRecentPosts] = useState<CommunityPost[]>([])
 
-  const recentPosts = [
+  useEffect(() => {
+    // Fetch real community data from API when available
+    const fetchCommunityData = async () => {
+      try {
+        // Replace with actual API calls
+        // const statsResponse = await fetch('/api/community/stats')
+        // const leaderboardResponse = await fetch('/api/community/leaderboard')
+        // const postsResponse = await fetch('/api/community/posts')
+
+        // For now, keep everything empty until real data is available
+        setCommunityStats({
+          activeMembers: 0,
+          successStories: 0,
+          supportMessages: 0,
+          averageWeightLoss: "0 lbs",
+        })
+        setLeaderboard([])
+        setRecentPosts([])
+      } catch (error) {
+        console.error("Failed to fetch community data:", error)
+      }
+    }
+
+    fetchCommunityData()
+  }, [])
+
+  const communityStatsDisplay = [
+    { label: "Active Members", value: communityStats.activeMembers.toString(), icon: <Users className="h-4 w-4" /> },
+    { label: "Success Stories", value: communityStats.successStories.toString(), icon: <Trophy className="h-4 w-4" /> },
     {
-      author: "Emma T.",
-      medication: "Mounjaro 7.5mg",
-      content:
-        "Just hit my 20lb milestone! The nausea was tough at first but the community support made all the difference. Thank you all! 💜",
-      likes: 24,
-      replies: 8,
-      timeAgo: "2h ago",
+      label: "Support Messages",
+      value: communityStats.supportMessages.toString(),
+      icon: <Heart className="h-4 w-4" />,
     },
-    {
-      author: "Carlos M.",
-      medication: "Ozempic 1mg",
-      content:
-        "Week 12 update: Down 18lbs! The AI meal planner has been a game changer for managing my reduced appetite. Anyone else loving the protein-focused suggestions?",
-      likes: 31,
-      replies: 12,
-      timeAgo: "4h ago",
-    },
-    {
-      author: "Rachel K.",
-      medication: "Wegovy 2.4mg",
-      content:
-        "Struggling with fatigue this week. Any tips for gentle workouts that don't drain energy? The AI suggested some chair exercises but looking for more variety.",
-      likes: 15,
-      replies: 18,
-      timeAgo: "6h ago",
-    },
+    { label: "Average Weight Loss", value: communityStats.averageWeightLoss, icon: <TrendingUp className="h-4 w-4" /> },
   ]
 
   return (
     <div className="space-y-6">
       {/* Community Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {communityStats.map((stat, index) => (
+        {communityStatsDisplay.map((stat, index) => (
           <Card key={index}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -80,34 +108,42 @@ export function CommunityFeatures() {
             <CardDescription>Top performers this month</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {leaderboard.map((member, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      {index === 0 && <Crown className="h-4 w-4 text-yellow-400" />}
-                      <span className="font-bold text-lg text-muted-foreground">#{index + 1}</span>
+            {leaderboard.length > 0 ? (
+              <div className="space-y-4">
+                {leaderboard.map((member, index) => (
+                  <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {index === 0 && <Crown className="h-4 w-4 text-yellow-400" />}
+                        <span className="font-bold text-lg text-muted-foreground">#{index + 1}</span>
+                      </div>
+                      <Avatar>
+                        <AvatarFallback className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                          {member.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-foreground">{member.name}</div>
+                        <div className="text-xs text-muted-foreground">{member.medication}</div>
+                      </div>
                     </div>
-                    <Avatar>
-                      <AvatarFallback className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                        {member.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium text-foreground">{member.name}</div>
-                      <div className="text-xs text-muted-foreground">{member.medication}</div>
+                    <div className="text-right">
+                      <div className="font-bold text-emerald-400">-{member.weightLoss} lbs</div>
+                      <div className="text-xs text-muted-foreground">{member.streak} day streak</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold text-emerald-400">-{member.weightLoss} lbs</div>
-                    <div className="text-xs text-muted-foreground">{member.streak} day streak</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No leaderboard data yet.</p>
+                <p className="text-sm">Start tracking your progress to see rankings!</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -121,38 +157,46 @@ export function CommunityFeatures() {
             <CardDescription>Support and celebrate together</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentPosts.map((post, index) => (
-                <div key={index} className="p-4 border border-border rounded-lg bg-card">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs">
-                        {post.author
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium text-sm text-foreground">{post.author}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {post.medication}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground ml-auto">{post.timeAgo}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">{post.content}</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Heart className="h-3 w-3" />
-                      {post.likes}
+            {recentPosts.length > 0 ? (
+              <div className="space-y-4">
+                {recentPosts.map((post) => (
+                  <div key={post.id} className="p-4 border border-border rounded-lg bg-card">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs">
+                          {post.author
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium text-sm text-foreground">{post.author}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {post.medication}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground ml-auto">{post.timeAgo}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="h-3 w-3" />
-                      {post.replies} replies
+                    <p className="text-sm text-muted-foreground mb-3">{post.content}</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Heart className="h-3 w-3" />
+                        {post.likes}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="h-3 w-3" />
+                        {post.replies} replies
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No community posts yet.</p>
+                <p className="text-sm">Be the first to share your journey!</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

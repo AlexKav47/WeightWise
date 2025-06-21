@@ -10,16 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Activity,
-  TrendingDown,
-  CalendarIcon,
-  Target,
-  MessageCircle,
-  CheckCircle,
-  AlertCircle,
-  Crown,
-} from "lucide-react"
+import { Activity, TrendingDown, CalendarIcon, Target, MessageCircle, CheckCircle, Crown } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { formatWeight, getUserWeightPreference } from "@/lib/weight-utils"
@@ -78,6 +69,20 @@ export function DashboardOverview() {
 
     const userWeightUnit = getUserWeightPreference()
 
+    // Level Calculation
+    let currentLevel = 1
+    let levelTitle = "Getting Started"
+
+    if (weightData.length > 5) {
+      currentLevel = 2
+      levelTitle = "Intermediate"
+    }
+
+    if (weightData.length > 10) {
+      currentLevel = 3
+      levelTitle = "Advanced"
+    }
+
     const stats: QuickStat[] = [
       {
         label: "Current Weight",
@@ -95,8 +100,8 @@ export function DashboardOverview() {
       },
       {
         label: "Current Level",
-        value: "Level 0",
-        change: "Getting Started",
+        value: `Level ${currentLevel}`,
+        change: levelTitle,
         trend: "neutral",
         icon: <Crown className="h-4 w-4" />,
       },
@@ -270,7 +275,7 @@ export function DashboardOverview() {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                {/* <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div className="flex items-center gap-3">
                     <AlertCircle className="h-5 w-5 text-orange-400" />
                     <span className="text-sm font-medium">Weight Logging</span>
@@ -312,7 +317,7 @@ export function DashboardOverview() {
                     <Progress value={0} className="h-2 w-16" />
                     <span className="text-sm text-orange-400 font-medium">0/7</span>
                   </div>
-                </div>
+                </div> */}
 
                 <div className="text-center p-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
                   <p className="text-sm text-purple-300">Ready to start your journey? 💪</p>
@@ -458,3 +463,4 @@ export function DashboardOverview() {
     </div>
   )
 }
+

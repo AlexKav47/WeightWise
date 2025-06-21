@@ -103,3 +103,5 @@ export function DashboardContent() {
     </div>
   )
 }
+
+export default DashboardContent

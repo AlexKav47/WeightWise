@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 import { LoginForm } from "@/components/login-form"
 
 interface User {
@@ -15,6 +14,24 @@ interface User {
   medicationDose?: string
   startDate?: string
 }
+
+/* ---------- NEW: Context & Hook ---------- */
+type AuthContextType = {
+  user: User | null
+  login: (userData: User) => void
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextType | null>(null)
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) {
+    throw new Error("useAuth must be used inside <AuthWrapper>")
+  }
+  return ctx
+}
+/* ----------------------------------------- */
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -29,12 +46,12 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
-  const handleLogin = (userData: User) => {
+  const login = (userData: User) => {
     setUser(userData)
     localStorage.setItem("weightoff-user", JSON.stringify(userData))
   }
 
-  const handleLogout = () => {
+  const logout = () => {
     setUser(null)
     localStorage.removeItem("weightoff-user")
     localStorage.removeItem("weightoff-data")
@@ -45,8 +62,14 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <LoginForm onLogin={handleLogin} />
+    return <LoginForm onLogin={login} />
   }
 
-  return <div className="min-h-screen bg-background">{children}</div>
+  /* ---------- NEW: Provide context ---------- */
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      <div className="min-h-screen bg-background">{children}</div>
+    </AuthContext.Provider>
+  )
+  /* ------------------------------------------ */
 }

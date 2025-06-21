@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Trophy, Target, Flame, Award, TrendingUp, Crown, Heart, Shield, Sparkles, Medal, Gift } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { formatWeight, getUserWeightPreference } from "@/lib/weight-utils"
 
 interface Achievement {
   id: string
@@ -68,6 +69,21 @@ export function EnhancedGamification() {
     const startWeight = weightData.length > 0 ? weightData[0].weight : 0
     const totalLost = startWeight > 0 ? startWeight - currentWeight : 0
 
+    // Get user's preferred weight unit
+    const userWeightUnit = getUserWeightPreference()
+
+    // Convert weight thresholds based on user's unit preference
+    const getWeightThreshold = (lbs: number) => {
+      switch (userWeightUnit) {
+        case "kg":
+          return lbs / 2.20462 // Convert lbs to kg
+        case "stone":
+          return lbs // Keep in lbs for stone calculation
+        default:
+          return lbs // Already in lbs
+      }
+    }
+
     // Calculate streaks
     const today = new Date()
     const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay())
@@ -95,18 +111,43 @@ export function EnhancedGamification() {
     const weeklyTotal = weeklyWeights + weeklyInjections
     const weeklyPercentage = Math.min((weeklyTotal / 7) * 100, 100)
 
-    // Calculate XP and level
+    // Calculate XP and level based on weight loss
     let totalXP = 0
     totalXP += weightData.length * 25 // 25 XP per weight entry
     totalXP += injectionData.length * 50 // 50 XP per injection
     totalXP += sideEffectsData.length * 15 // 15 XP per side effect log
     totalXP += Math.floor(totalLost) * 100 // 100 XP per pound lost
 
-    const currentLevel = Math.floor(totalXP / 500) + 1
-    const xpInCurrentLevel = totalXP % 500
-    const xpToNextLevel = 500
+    // Level calculation based on weight loss milestones
+    let currentLevel = 1
+    let levelTitle = "Getting Started"
+    let levelPerks = ["Basic tracking", "AI meal suggestions"]
 
-    // Update achievements based on actual data
+    if (totalLost >= 20) {
+      currentLevel = 8
+      levelTitle = "Weight Loss Legend"
+      levelPerks = ["3x XP weekends", "Premium meal plans", "VIP AI support", "Advanced analytics"]
+    } else if (totalLost >= 15) {
+      currentLevel = 7
+      levelTitle = "Transformation Master"
+      levelPerks = ["2x XP weekends", "Exclusive meal plans", "Priority AI support", "Progress insights"]
+    } else if (totalLost >= 10) {
+      currentLevel = 6
+      levelTitle = "Weight Loss Warrior"
+      levelPerks = ["Weekend XP boost", "Custom meal plans", "Enhanced AI support"]
+    } else if (totalLost >= 5) {
+      currentLevel = 4
+      levelTitle = "Progress Pioneer"
+      levelPerks = ["Advanced tracking", "Personalized meal plans", "AI coaching"]
+    } else if (totalLost >= 2) {
+      currentLevel = 2
+      levelTitle = "Journey Starter"
+      levelPerks = ["Enhanced tracking", "Basic meal suggestions", "AI tips"]
+    }
+
+    const xpToNextLevel = currentLevel * 500
+
+    // Update achievements based on actual data with user's weight unit
     const initialAchievements: Achievement[] = [
       // Weight Loss Achievements
       {
@@ -121,56 +162,69 @@ export function EnhancedGamification() {
         xpReward: 50,
       },
       {
-        id: "five-pounds",
+        id: "first-loss",
         title: "Breaking Barriers",
-        description: "Lose your first 5 pounds",
+        description: `Lose your first ${formatWeight(getWeightThreshold(2), userWeightUnit)}`,
         icon: <Trophy className="h-5 w-5" />,
         category: "weight",
         rarity: "common",
-        unlocked: totalLost >= 5,
-        unlockedDate: totalLost >= 5 ? new Date() : undefined,
-        progress: Math.min(totalLost, 5),
-        maxProgress: 5,
+        unlocked: totalLost >= getWeightThreshold(2),
+        unlockedDate: totalLost >= getWeightThreshold(2) ? new Date() : undefined,
+        progress: Math.min(totalLost, getWeightThreshold(2)),
+        maxProgress: getWeightThreshold(2),
         xpReward: 100,
+      },
+      {
+        id: "five-pounds",
+        title: "Momentum Builder",
+        description: `Lose ${formatWeight(getWeightThreshold(5), userWeightUnit)} - you're on fire!`,
+        icon: <Medal className="h-5 w-5" />,
+        category: "weight",
+        rarity: "rare",
+        unlocked: totalLost >= getWeightThreshold(5),
+        unlockedDate: totalLost >= getWeightThreshold(5) ? new Date() : undefined,
+        progress: Math.min(totalLost, getWeightThreshold(5)),
+        maxProgress: getWeightThreshold(5),
+        xpReward: 200,
       },
       {
         id: "ten-pounds",
         title: "Double Digits",
-        description: "Lose 10 pounds - you're unstoppable!",
-        icon: <Medal className="h-5 w-5" />,
+        description: `Lose ${formatWeight(getWeightThreshold(10), userWeightUnit)} - you're unstoppable!`,
+        icon: <Crown className="h-5 w-5" />,
         category: "weight",
-        rarity: "rare",
-        unlocked: totalLost >= 10,
-        unlockedDate: totalLost >= 10 ? new Date() : undefined,
-        progress: Math.min(totalLost, 10),
-        maxProgress: 10,
-        xpReward: 200,
+        rarity: "epic",
+        unlocked: totalLost >= getWeightThreshold(10),
+        unlockedDate: totalLost >= getWeightThreshold(10) ? new Date() : undefined,
+        progress: Math.min(totalLost, getWeightThreshold(10)),
+        maxProgress: getWeightThreshold(10),
+        xpReward: 300,
       },
       {
         id: "fifteen-pounds",
         title: "Transformation Master",
-        description: "Lose 15 pounds - incredible progress!",
-        icon: <Crown className="h-5 w-5" />,
+        description: `Lose ${formatWeight(getWeightThreshold(15), userWeightUnit)} - incredible progress!`,
+        icon: <Sparkles className="h-5 w-5" />,
         category: "weight",
-        rarity: "epic",
-        unlocked: totalLost >= 15,
-        unlockedDate: totalLost >= 15 ? new Date() : undefined,
-        progress: Math.min(totalLost, 15),
-        maxProgress: 15,
-        xpReward: 300,
+        rarity: "legendary",
+        unlocked: totalLost >= getWeightThreshold(15),
+        unlockedDate: totalLost >= getWeightThreshold(15) ? new Date() : undefined,
+        progress: Math.min(totalLost, getWeightThreshold(15)),
+        maxProgress: getWeightThreshold(15),
+        xpReward: 500,
       },
       {
         id: "twenty-pounds",
         title: "Phoenix Rising",
-        description: "Lose 20 pounds - you're a new person!",
+        description: `Lose ${formatWeight(getWeightThreshold(20), userWeightUnit)} - you're a new person!`,
         icon: <Sparkles className="h-5 w-5" />,
         category: "weight",
         rarity: "legendary",
-        unlocked: totalLost >= 20,
-        unlockedDate: totalLost >= 20 ? new Date() : undefined,
-        progress: Math.min(totalLost, 20),
-        maxProgress: 20,
-        xpReward: 500,
+        unlocked: totalLost >= getWeightThreshold(20),
+        unlockedDate: totalLost >= getWeightThreshold(20) ? new Date() : undefined,
+        progress: Math.min(totalLost, getWeightThreshold(20)),
+        maxProgress: getWeightThreshold(20),
+        xpReward: 750,
       },
 
       // Consistency Achievements
@@ -270,8 +324,8 @@ export function EnhancedGamification() {
     // Progress chart data based on actual weight entries
     const chartData = weightData.slice(-8).map((entry: any, index: number) => ({
       week: `Week ${index + 1}`,
-      xp: (index + 1) * 150 + Math.floor(Math.random() * 100),
-      level: Math.floor(((index + 1) * 150) / 500) + 1,
+      xp: (index + 1) * 25, // Remove Math.random() component
+      level: Math.floor(((index + 1) * 25) / 500) + 1,
     }))
 
     setAchievements(initialAchievements)
@@ -282,13 +336,8 @@ export function EnhancedGamification() {
       current: currentLevel,
       xp: totalXP,
       xpToNext: xpToNextLevel,
-      title: currentLevel >= 5 ? "Weight Loss Warrior" : currentLevel >= 3 ? "Progress Pioneer" : "Getting Started",
-      perks:
-        currentLevel >= 5
-          ? ["2x XP on weekends", "Exclusive meal plans", "Priority AI support"]
-          : currentLevel >= 3
-            ? ["Advanced tracking", "Custom meal plans"]
-            : ["Basic tracking", "AI meal suggestions"],
+      title: levelTitle,
+      perks: levelPerks,
     })
   }
 
@@ -581,7 +630,8 @@ export function EnhancedGamification() {
                     <div className="mt-2">
                       <Progress value={(achievement.progress / achievement.maxProgress) * 100} className="h-1" />
                       <div className="text-xs text-muted-foreground mt-1">
-                        {achievement.progress} / {achievement.maxProgress}
+                        {formatWeight(achievement.progress, getUserWeightPreference())} /{" "}
+                        {formatWeight(achievement.maxProgress, getUserWeightPreference())}
                       </div>
                     </div>
                   )}
