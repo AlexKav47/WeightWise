@@ -17,6 +17,8 @@ import {
   Play,
   Sparkles,
   Target,
+  CreditCard,
+  Loader2,
 } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
 import { DashboardContent } from "@/components/dashboard-content"
@@ -35,9 +37,37 @@ interface User {
 export function LandingPage() {
   const [showLogin, setShowLogin] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [isYearly, setIsYearly] = useState(false)
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null)
 
   const handleGetStarted = () => {
     setShowLogin(true)
+  }
+
+  const handleStripeCheckout = async (plan: string, isYearlyBilling: boolean) => {
+    setProcessingPlan(plan)
+
+    try {
+      // In production, this would integrate with Stripe
+      // const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+      // const priceId = isYearlyBilling ? `price_${plan}_yearly_123` : `price_${plan}_monthly_123`
+      // const { error } = await stripe.redirectToCheckout({
+      //   lineItems: [{ price: priceId, quantity: 1 }],
+      //   mode: 'subscription',
+      //   successUrl: `${window.location.origin}/success`,
+      //   cancelUrl: `${window.location.origin}/`,
+      // })
+
+      // Simulate Stripe checkout
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Simulate successful payment - redirect to success page
+      window.location.href = "/success"
+    } catch (error) {
+      console.error("Payment failed:", error)
+    } finally {
+      setProcessingPlan(null)
+    }
   }
 
   const handleLogin = (userData: User) => {
@@ -495,6 +525,29 @@ export function LandingPage() {
             <p className="text-xl text-muted-foreground">Choose the plan that fits your GLP-1 journey</p>
           </div>
 
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="bg-muted/50 p-1 rounded-lg flex items-center">
+              <button
+                onClick={() => setIsYearly(false)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  !isYearly ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setIsYearly(true)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  isYearly ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Yearly
+                <Badge className="ml-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">Save 17%</Badge>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <Card className="gradient-card flex flex-col h-full">
               <CardHeader>
@@ -539,7 +592,9 @@ export function LandingPage() {
                 <CardTitle className="text-2xl">Plus</CardTitle>
                 <CardDescription>Enhanced AI features</CardDescription>
                 <div className="text-4xl font-bold text-foreground mt-4">
-                  $4.99<span className="text-lg text-muted-foreground">/month</span>
+                  ${isYearly ? "49.99" : "4.99"}
+                  <span className="text-lg text-muted-foreground">/{isYearly ? "year" : "month"}</span>
+                  {isYearly && <div className="text-sm text-emerald-400 font-normal">$4.17/month • Save $10.89</div>}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -571,8 +626,22 @@ export function LandingPage() {
                     </li>
                   </ul>
                 </div>
-                <Button onClick={handleGetStarted} className="w-full">
-                  Start Plus Trial
+                <Button
+                  onClick={() => handleStripeCheckout("plus", isYearly)}
+                  disabled={processingPlan === "plus"}
+                  className="w-full"
+                >
+                  {processingPlan === "plus" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Subscribe to Plus
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -582,7 +651,9 @@ export function LandingPage() {
                 <CardTitle className="text-2xl">Premium</CardTitle>
                 <CardDescription>Complete AI-powered experience</CardDescription>
                 <div className="text-4xl font-bold text-foreground mt-4">
-                  $9.99<span className="text-lg text-muted-foreground">/month</span>
+                  ${isYearly ? "99.99" : "9.99"}
+                  <span className="text-lg text-muted-foreground">/{isYearly ? "year" : "month"}</span>
+                  {isYearly && <div className="text-sm text-emerald-400 font-normal">$8.33/month • Save $19.89</div>}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -611,10 +682,21 @@ export function LandingPage() {
                   </ul>
                 </div>
                 <Button
-                  onClick={handleGetStarted}
+                  onClick={() => handleStripeCheckout("premium", isYearly)}
+                  disabled={processingPlan === "premium"}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
                 >
-                  Start Premium Trial
+                  {processingPlan === "premium" ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Subscribe to Premium
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -706,10 +788,10 @@ export function LandingPage() {
           </Button>
         </div>
       </section>
-
-      
     </div>
   )
 }
+
+
 
 

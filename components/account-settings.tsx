@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { User, Crown, CreditCard, Trash2 } from "lucide-react"
+import { User, Crown, CreditCard, Trash2, Calendar, X } from "lucide-react"
 import { useSubscription } from "@/lib/subscription-context"
 import { toast } from "@/components/ui/use-toast"
 
@@ -23,12 +23,12 @@ interface UserProfile {
 }
 
 export function AccountSettings() {
-  const { tier, cancelSubscription } = useSubscription()
+  const { tier, cancelSubscription, isLoading } = useSubscription()
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     email: "",
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isProfileLoading, setIsProfileLoading] = useState(false)
 
   useEffect(() => {
     // Load user profile from localStorage
@@ -39,7 +39,7 @@ export function AccountSettings() {
   }, [])
 
   const handleSaveProfile = async () => {
-    setIsLoading(true)
+    setIsProfileLoading(true)
     try {
       // Save to localStorage (in production, this would be an API call)
       localStorage.setItem("weightwise-user", JSON.stringify(profile))
@@ -55,7 +55,7 @@ export function AccountSettings() {
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setIsProfileLoading(false)
     }
   }
 
@@ -86,6 +86,28 @@ export function AccountSettings() {
     }
   }
 
+  const handleCancelSubscription = async () => {
+    if (
+      confirm(
+        "Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.",
+      )
+    ) {
+      try {
+        await cancelSubscription()
+        toast({
+          title: "Subscription Cancelled",
+          description: "Your subscription has been cancelled. You'll retain access until your billing period ends.",
+        })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to cancel subscription. Please try again.",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
   const getTierBadge = () => {
     switch (tier) {
       case "premium":
@@ -100,6 +122,31 @@ export function AccountSettings() {
       default:
         return <Badge variant="outline">Free</Badge>
     }
+  }
+
+  const getSubscriptionEndDate = () => {
+    // Simulate subscription end date (30 days from now for monthly, 365 days for yearly)
+    const subscriptionStart = localStorage.getItem("subscription-start-date")
+    if (!subscriptionStart) {
+      // Set subscription start date if not exists
+      const startDate = new Date().toISOString()
+      localStorage.setItem("subscription-start-date", startDate)
+      return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+    }
+
+    const start = new Date(subscriptionStart)
+    const isYearly = localStorage.getItem("subscription-billing") === "yearly"
+    const daysToAdd = isYearly ? 365 : 30
+    return new Date(start.getTime() + daysToAdd * 24 * 60 * 60 * 1000)
+  }
+
+  const getDaysRemaining = () => {
+    if (tier === "free") return 0
+    const endDate = getSubscriptionEndDate()
+    const now = new Date()
+    const diffTime = endDate.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return Math.max(0, diffDays)
   }
 
   return (
@@ -220,8 +267,8 @@ export function AccountSettings() {
             </Select>
           </div>
 
-          <Button onClick={handleSaveProfile} disabled={isLoading} className="w-full md:w-auto">
-            {isLoading ? "Saving..." : "Save Profile"}
+          <Button onClick={handleSaveProfile} disabled={isProfileLoading} className="w-full md:w-auto">
+            {isProfileLoading ? "Saving..." : "Save Profile"}
           </Button>
         </CardContent>
       </Card>
@@ -240,22 +287,37 @@ export function AccountSettings() {
             <div>
               <div className="font-medium text-foreground">Current Plan</div>
               <div className="text-sm text-muted-foreground capitalize">{tier} subscription</div>
+              {tier !== "free" && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{getDaysRemaining()} days remaining</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">{getTierBadge()}</div>
           </div>
 
           {tier !== "free" && (
-            <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">
-                Your subscription will renew automatically. You can cancel anytime.
+            <div className="space-y-3">
+              <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-orange-300">Subscription Active</div>
+                    <div className="text-sm text-orange-400/80">
+                      Your subscription will renew on {getSubscriptionEndDate().toLocaleDateString()}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelSubscription}
+                    disabled={isLoading}
+                    className="text-red-400 border-red-400 hover:bg-red-400/10"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel Subscription
+                  </Button>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                onClick={cancelSubscription}
-                className="text-red-400 border-red-400 hover:bg-red-400/10"
-              >
-                Cancel Subscription
-              </Button>
             </div>
           )}
 
@@ -266,6 +328,54 @@ export function AccountSettings() {
                 Get unlimited access to AI features, community discussions, and advanced analytics.
               </div>
               <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">View Plans</Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Payment Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Payment Settings
+          </CardTitle>
+          <CardDescription>Manage your payment methods and billing</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {tier !== "free" ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                <div>
+                  <div className="font-medium text-foreground">Payment Method</div>
+                  <div className="text-sm text-muted-foreground">•••• •••• •••• 4242</div>
+                  <div className="text-xs text-muted-foreground">Expires 12/25</div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Update Card
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                <div>
+                  <div className="font-medium text-foreground">Billing Cycle</div>
+                  <div className="text-sm text-muted-foreground">Monthly billing</div>
+                  <div className="text-xs text-muted-foreground">
+                    Next payment: {getSubscriptionEndDate().toLocaleDateString()}
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Switch to Yearly
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
+              <div className="font-medium text-foreground mb-2">No Payment Method</div>
+              <div className="text-sm text-muted-foreground mb-3">
+                Upgrade to a paid plan to manage payment settings.
+              </div>
+              <Button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">Choose Plan</Button>
             </div>
           )}
         </CardContent>
@@ -296,3 +406,6 @@ export function AccountSettings() {
     </div>
   )
 }
+
+
+

@@ -674,5 +674,3 @@ export function ProfileSetup({ isOpen, onComplete, initialData = {} }: ProfileSe
     </Dialog>
   )
 }
-
-

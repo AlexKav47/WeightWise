@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { Activity } from "lucide-react"
+import { Activity, Facebook, Instagram, Twitter, Youtube } from "lucide-react"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -52,6 +52,22 @@ export function Footer() {
                 <span className="text-xl font-bold text-white">WeightWise</span>
               </div>
               <p className="text-sm text-slate-400">Your AI-powered companion for the GLP-1 journey.</p>
+
+              {/* Social Media Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-purple-400 p-2">
+                  <Facebook className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-400 p-2">
+                  <Twitter className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-pink-400 p-2">
+                  <Instagram className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-red-400 p-2">
+                  <Youtube className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Product Section */}
@@ -335,4 +351,5 @@ export function Footer() {
     </>
   )
 }
+
 
